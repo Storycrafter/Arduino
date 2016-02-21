@@ -69,6 +69,8 @@
 	#include "core/MyHwATMega328.cpp"
 #elif defined(ARDUINO_ARCH_SAMD)
         #include "core/MyHwSAMD.cpp"
+#elif defined(__PIC32__)
+		#include "core/MyHwChipkit.cpp"
 #endif
 
 // LEDS
