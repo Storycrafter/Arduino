@@ -21,12 +21,12 @@
 
   #include <stddef.h>
 
-  /*** USER DEFINES:  ***/  
+  /*** USER DEFINES:  ***/
   //#define FAILURE_HANDLING
   //#define SPI_UART  // Requires library from https://github.com/TMRh20/Sketches/tree/master/SPI_UART
   //#define MY_SOFTSPI   // Requires library from https://github.com/greiman/DigitalIO
   /**********************/
-  
+
   // Define _BV for non-Arduino platforms and for Arduino DUE
 #if defined (ARDUINO) && !defined (__arm__) && !defined(_SPI)
 	#if defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
@@ -36,7 +36,11 @@
 		#include <SPI_UART.h>
 		#define _SPI uspi
 	  #elif defined MY_SOFTSPI
-		#include "drivers/AVR/DigitalIO/DigitalIO.h"
+	  	#if defined (__PIC32__)
+	  		#include <SoftSPI.h>
+	  	#else
+			#include "drivers/AVR/DigitalIO/DigitalIO.h"
+		#endif
 
 		// change these pins to your liking
 		const uint8_t SOFT_SPI_MISO_PIN = MY_SOFT_SPI_MOSI_PIN;
@@ -48,7 +52,7 @@
           #elif defined(ARDUINO_ARCH_SAMD)
                 #include <SPI.h>
                 #define _SPI SPI1
-	  #else	    
+	  #else
 		#include <SPI.h>
 		#define _SPI SPI
 	#endif
@@ -74,7 +78,7 @@
   #define _SPI SPI
  #endif
 #endif
- 
+
 // Avoid spurious warnings
 // Arduino DUE is arm and uses traditional PROGMEM constructs
 #if 1
@@ -88,27 +92,29 @@
 
 // Progmem is Arduino-specific
 // Arduino DUE is arm and does not include avr/pgmspace
-#if defined(__AVR__)
+#if defined(__AVR__) && !defined(__PIC32__)
 	#include <avr/pgmspace.h>
 #else
-#if defined(ESP8266)
-#include <pgmspace.h>
-#else
-#if ! defined(ARDUINO) // This doesn't work on Arduino DUE
-	typedef char const char;
-#else // Fill in pgm_read_byte that is used, but missing from DUE
-	#define pgm_read_byte(addr) (*(const unsigned char *)(addr))
-#endif
-#endif
+	#if defined(ESP8266)
+		#include <pgmspace.h>
+	#else
+		#if ! defined(ARDUINO) // This doesn't work on Arduino DUE
+			typedef char const char;
+		#else // Fill in pgm_read_byte that is used, but missing from DUE
+			#define pgm_read_byte(addr) (*(const unsigned char *)(addr))
+		#endif
+	#endif
 
-#if !defined ( CORE_TEENSY ) && ! defined(ESP8266) && ! defined(ARDUINO_ARCH_SAMD)
-	typedef uint16_t prog_uint16_t;
-	#define PSTR(x) (x)
-	#define printf_P printf
-	#define strlen_P strlen
-	#define PROGMEM
-	#define pgm_read_word(p) (*(p))
-#endif
+	#if !defined ( CORE_TEENSY ) && ! defined(ESP8266) && ! defined(ARDUINO_ARCH_SAMD)
+		#if !defined (__PIC32__ )
+			typedef uint16_t prog_uint16_t;
+		#endif
+		#define PSTR(x) (x)
+		#define printf_P printf
+		#define strlen_P strlen
+		#define PROGMEM
+		#define pgm_read_word(p) (*(p))
+	#endif
 #endif
 
 

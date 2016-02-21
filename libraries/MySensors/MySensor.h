@@ -240,8 +240,12 @@
 		#if defined(ARDUINO_ARCH_ESP8266)
 			#error Soft SPI is not available on ESP8266
 		#endif
-		#include "drivers/AVR/DigitalIO/SoftI2cMaster.cpp"
-		#include "drivers/AVR/DigitalIO/PinIO.cpp"
+		#if defined (__PIC32__)
+			#include <SoftSPI.h>
+		#else
+			#include "drivers/AVR/DigitalIO/SoftI2cMaster.cpp"
+			#include "drivers/AVR/DigitalIO/PinIO.cpp"
+		#endif
 	#endif
 
 	// FLASH

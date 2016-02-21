@@ -48,13 +48,17 @@ class RF24
 {
 private:
 #ifdef MY_SOFTSPI
-  SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, SPI_MODE> spi;
+	#ifdef __PIC32__
+		SoftSPI spi(MY_RF24_CS_PIN, MY_SOFT_SPI_MOSI_PIN, <MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_SCK_PIN);
+	#else
+  		SoftSPI<MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_SCK_PIN, SPI_MODE> spi;
+  	#endif
 #elif defined (SPI_UART)
   SPIUARTClass uspi;
 #endif
 
   uint8_t ce_pin; /**< "Chip Enable" pin, activates the RX or TX role */
-  uint8_t csn_pin; /**< SPI Chip select */  
+  uint8_t csn_pin; /**< SPI Chip select */
   bool p_variant; /* False for RF24L01 and true for RF24L01P */
   uint8_t payload_size; /**< Fixed size of payloads */
   bool dynamic_payloads_enabled; /**< Whether dynamic payloads are enabled. */
@@ -62,7 +66,7 @@ private:
   uint8_t addr_width; /**< The address width to use - 3,4 or 5 bytes. */
   uint32_t lastAvailableCheck; /**< Limits the amount of time between reading data, only when switching between modes */
   boolean listeningStarted; /**< Var for delaying available() after start listening */
-  
+
 public:
 
   /**
@@ -242,15 +246,15 @@ public:
    * at max PA level.
    * During active transmission, the radio will consume about 11.5mA, but this will
    * be reduced to 26uA (.026mA) between sending.
-   * In full powerDown mode, the radio will consume approximately 900nA (.0009mA)   
+   * In full powerDown mode, the radio will consume approximately 900nA (.0009mA)
    */
   void powerDown(void);
 
   /**
    * Leave low-power mode - required for normal radio operation after calling powerDown()
-   * 
+   *
    * To return to low power mode, call powerDown().
-   * @note This will take up to 5ms for maximum compatibility 
+   * @note This will take up to 5ms for maximum compatibility
    */
   void powerUp(void) ;
 
@@ -560,7 +564,7 @@ public:
   * @param rx_ready Mask payload received interrupts
   */
   void maskIRQ(bool tx_ok,bool tx_fail,bool rx_ready);
-  
+
   /**
   * Set the address width from 3 to 5 bytes (24, 32 or 40 bit)
   *
@@ -569,14 +573,14 @@ public:
 
   void setAddressWidth(uint8_t a_width);
 
-  
+
    /**
    * Close a pipe after it has been previously opened.
    * Can be safely called without having previously opened a pipe.
    * @param pipe Which pipe # to close, 0-5.
    */
   void closeReadingPipe( uint8_t pipe ) ;
-  
+
   /**@}*/
 
   /**@}*/
@@ -751,19 +755,19 @@ public:
    *
    */
   void disableCRC( void ) ;
-  
+
    /**
    * Enable error detection by un-commenting \#define FAILURE_HANDLING in RF24_config.h
    * If a failure has been detected, it usually indicates a hardware issue. By default the library
-   * will cease operation when a failure is detected.  
-   * This should allow advanced users to detect and resolve intermittent hardware issues.  
-   *   
+   * will cease operation when a failure is detected.
+   * This should allow advanced users to detect and resolve intermittent hardware issues.
+   *
    * In most cases, the radio must be re-enabled via radio.begin(); and the appropriate settings
    * applied after a failure occurs, if wanting to re-enable the device immediately.
-   * 
+   *
    * Usage: (Failure handling must be enabled per above)
    *  @code
-   *  if(radio.failureDetected){ 
+   *  if(radio.failureDetected){
    *    radio.begin(); 					     // Attempt to re-configure the radio with defaults
    *    radio.failureDetected = 0;		     // Reset the detection value
    *	radio.openWritingPipe(addresses[1]); // Re-configure pipe addresses
@@ -773,10 +777,10 @@ public:
    * @endcode
   */
   //#if defined (FAILURE_HANDLING)
-    bool failureDetected; 
+    bool failureDetected;
   //#endif
-  
-  
+
+
   /**@}*/
   /**
    * @name Deprecated
@@ -922,14 +926,14 @@ private:
    * @return Current value of status register
    */
   uint8_t get_status(void);
- 
+
   /**
    * Print the current feature register value to serial
    *
    * @warning Does nothing if MY_DEBUG is not defined
    */
   void print_feature(void);
- 
+
   /**
    * Decode and print the given status to serial
    *
@@ -989,11 +993,11 @@ private:
    */
 
   uint8_t spiTrans(uint8_t cmd);
-  
+
   #if defined (FAILURE_HANDLING)
 	void errNotify(void);
   #endif
-  
+
   /**@}*/
 
 };
