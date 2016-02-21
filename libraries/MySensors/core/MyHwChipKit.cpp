@@ -50,7 +50,7 @@ static void hwInitConfigBlock( size_t length = 1024 /*ATMega328 has 1024 bytes*/
   static bool initDone = false;
   if (!initDone)
   {
-    EEPROM.begin(length);
+    EEPROM.setMaxAddress(length);
     initDone = true;
   }
 }
@@ -75,7 +75,6 @@ void hwWriteConfigBlock(void* buf, void* adr, size_t length)
   {
     EEPROM.write(offs++, *src++);
   }
-  EEPROM.commit();
 }
 
 uint8_t hwReadConfig(int adr)
@@ -102,6 +101,9 @@ void hwWatchdogReset() {
   // TODO: Not supported!
 }
 
+void hwInit() {
+  MY_SERIALDEVICE.begin(MY_BAUD_RATE);
+}
 
 int8_t hwSleep(unsigned long ms) {
 	// TODO: Not supported!
@@ -118,17 +120,17 @@ int8_t hwSleep(uint8_t interrupt1, uint8_t mode1, uint8_t interrupt2, uint8_t mo
 	return -2;
 }
 
-ADC_MODE(ADC_VCC);
+// ADC_MODE(ADC_VCC);
 
-uint16_t hwCPUVoltage() {
-	// in mV
-	return ESP.getVcc();
-}
+// uint16_t hwCPUVoltage() {
+// 	// in mV
+// 	return ESP.getVcc();
+// }
 
-uint16_t hwCPUFrequency() {
-	// in 1/10Mhz
-	return ESP.getCpuFreqMHz()*10;
-}
+// uint16_t hwCPUFrequency() {
+// 	// in 1/10Mhz
+// 	return ESP.getCpuFreqMHz()*10;
+// }
 
 #ifdef MY_DEBUG
 void hwDebugPrint(const char *fmt, ... ) {

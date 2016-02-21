@@ -16,7 +16,7 @@ static void print_hex( uint8_t v, const bool prefix0x = false )
 {
   if (prefix0x)
     Serial.print(F("0x"));
-  
+
   Serial.print(v >> 4, HEX);
   Serial.print(v & 0x0F, HEX);
 }
@@ -40,19 +40,19 @@ void RF24::csn(bool mode)
 #if defined (RF24_TINY)
 	if (ce_pin != csn_pin) {
 		digitalWrite(csn_pin,mode);
-	} 
+	}
 	else {
 		if (mode == HIGH) {
 			PORTB |= (1<<PINB2);  	// SCK->CSN HIGH
 			delayMicroseconds(100); // allow csn to settle.
-		} 
+		}
 		else {
 			PORTB &= ~(1<<PINB2);	// SCK->CSN LOW
 			delayMicroseconds(11);  // allow csn to settle
 		}
-	}		
+	}
 #elif !defined  (__arm__) || defined (CORE_TEENSY) || defined(ARDUINO_ARCH_SAMD)
-	digitalWrite(csn_pin,mode);		
+	digitalWrite(csn_pin,mode);
 #endif
 
 }
@@ -143,7 +143,7 @@ uint8_t RF24::write_register(uint8_t reg, uint8_t value)
   uint8_t status;
 
 #ifdef MY_DEBUG_VERBOSE
-  Serial.print(F("write_register(")); print_hex(reg, true); Serial.print(F(",")); print_hex(value, true); Serial.println(F(")")); 
+  Serial.print(F("write_register(")); print_hex(reg, true); Serial.print(F(",")); print_hex(value, true); Serial.println(F(")"));
 #endif
 
 #if defined (__arm__) && !defined ( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
@@ -168,7 +168,7 @@ uint8_t RF24::write_payload(const void* buf, uint8_t data_len, const uint8_t wri
 
    data_len = min(data_len, payload_size);
    uint8_t blank_len = dynamic_payloads_enabled ? 0 : payload_size - data_len;
-  
+
   //printf("[Writing %u bytes %u blanks]",data_len,blank_len);
 
  #if defined (__arm__) && !defined ( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
@@ -216,7 +216,7 @@ uint8_t RF24::read_payload(void* buf, uint8_t data_len)
 
   if(data_len > payload_size) data_len = payload_size;
   uint8_t blank_len = dynamic_payloads_enabled ? 0 : payload_size - data_len;
-  
+
   //printf("[Reading %u bytes %u blanks]",data_len,blank_len);
 
 
@@ -301,7 +301,7 @@ void RF24::print_feature(void)
 #ifdef MY_DEBUG_VERBOSE
   Serial.print(F("FEATURE="));
   print_hex(read_register(FEATURE), true);
-  Serial.println(F("")); 
+  Serial.println(F(""));
 #endif
 }
 
@@ -342,7 +342,7 @@ void RF24::print_byte_register(uint8_t reg, uint8_t qty)
   while (qty--)
   {
     print_hex(read_register(reg++), prefix0x);
-    Serial.print(F(" ")); 
+    Serial.print(F(" "));
     prefix0x = false;
   }
   Serial.println(F(""));
@@ -381,6 +381,9 @@ void RF24::print_address_register(uint8_t reg, uint8_t qty)
 RF24::RF24(uint8_t _cepin, uint8_t _cspin):
   ce_pin(_cepin), csn_pin(_cspin), p_variant(false),
   payload_size(32), dynamic_payloads_enabled(false), addr_width(5)//,pipe0_reading_address(0)
+#ifdef __PIC32__
+	,spi(_cspin, MY_SOFT_SPI_MOSI_PIN, MY_SOFT_SPI_MISO_PIN, MY_SOFT_SPI_SCK_PIN)
+#endif
 {
 }
 
@@ -612,7 +615,7 @@ void RF24::stopListening(void)
 
   //flush_rx();
   write_register(NRF_CONFIG, ( read_register(NRF_CONFIG) ) & ~_BV(PRIM_RX) );
- 
+
   #if defined (RF24_TINY)
   // for 3 pins solution TX mode is only left with additonal powerDown/powerUp cycle
   if (ce_pin == csn_pin) {
@@ -622,7 +625,7 @@ void RF24::stopListening(void)
   #endif
 
   write_register(EN_RXADDR,read_register(EN_RXADDR) | get_child_pipe_mask(0)); // Enable RX on pipe0
-  
+
   delayMicroseconds(100);
 }
 
@@ -673,20 +676,20 @@ bool RF24::write( const void* buf, uint8_t len, const bool multicast )
 	//Wait until complete or failed
 	#if defined (FAILURE_HANDLING)
 		uint32_t timer = millis();
-	#endif 
-	
-	while( ! ( get_status()  & ( _BV(TX_DS) | _BV(MAX_RT) ))) { 
+	#endif
+
+	while( ! ( get_status()  & ( _BV(TX_DS) | _BV(MAX_RT) ))) {
 		#if defined (FAILURE_HANDLING)
-			if(millis() - timer > 75){			
+			if(millis() - timer > 75){
 				errNotify();
-				return 0;							
+				return 0;
 			}
 		#endif
 		#if defined(ARDUINO_ARCH_ESP8266)
 			yield();
 		#endif
 	}
-    
+
 	ce(LOW);
 
 	uint8_t status = write_register(RF24_STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
@@ -722,9 +725,9 @@ bool RF24::writeBlocking( const void* buf, uint8_t len, uint32_t timeout )
 			if(millis() - timer > timeout){ return 0; }		  //If this payload has exceeded the user-defined timeout, exit and return 0
 		}
 		#if defined (FAILURE_HANDLING)
-			if(millis() - timer > (timeout+75) ){			
+			if(millis() - timer > (timeout+75) ){
 				errNotify();
-				return 0;							
+				return 0;
 			}
 		#endif
 
@@ -757,7 +760,7 @@ bool RF24::writeFast( const void* buf, uint8_t len, const bool multicast )
 	#if defined (FAILURE_HANDLING)
 		uint32_t timer = millis();
 	#endif
-	
+
 	while( ( get_status()  & ( _BV(TX_FULL) ))) {			  //Blocking only if FIFO is full. This will loop and block until TX is successful or fail
 
 		if( get_status() & _BV(MAX_RT)){
@@ -767,9 +770,9 @@ bool RF24::writeFast( const void* buf, uint8_t len, const bool multicast )
 															  //From the user perspective, if you get a 0, just keep trying to send the same payload
 		}
 		#if defined (FAILURE_HANDLING)
-			if(millis() - timer > 75 ){			
+			if(millis() - timer > 75 ){
 				errNotify();
-				return 0;							
+				return 0;
 			}
 		#endif
   	}
@@ -838,7 +841,7 @@ bool RF24::txStandBy(){
 		#if defined (FAILURE_HANDLING)
 			if( millis() - timeout > 75){
 				errNotify();
-				return 0;	
+				return 0;
 			}
 		#endif
 	}
@@ -865,12 +868,12 @@ bool RF24::txStandBy(uint32_t timeout){
 		#if defined (FAILURE_HANDLING)
 			if( millis() - start > (timeout+75)){
 				errNotify();
-				return 0;	
+				return 0;
 			}
 		#endif
 	}
 
-	
+
 	ce(LOW);				   //Set STANDBY-I mode
 	return 1;
 
@@ -971,8 +974,8 @@ void RF24::openWritingPipe(uint64_t value)
 
   write_register(RX_ADDR_P0, reinterpret_cast<uint8_t*>(&value), addr_width);
   write_register(TX_ADDR, reinterpret_cast<uint8_t*>(&value), addr_width);
-  
-  
+
+
   //const uint8_t max_payload_size = 32;
   //write_register(RX_PW_P0,min(payload_size,max_payload_size));
   write_register(RX_PW_P0,payload_size);
@@ -1336,10 +1339,10 @@ void RF24::setCRCLength(rf24_crclength_e length)
 rf24_crclength_e RF24::getCRCLength(void)
 {
   rf24_crclength_e result = RF24_CRC_DISABLED;
-  
+
   uint8_t config = read_register(NRF_CONFIG) & ( _BV(CRCO) | _BV(EN_CRC)) ;
   uint8_t AA = read_register(EN_AA);
-  
+
   if ( config & _BV(EN_CRC ) || AA)
   {
     if ( config & _BV(CRCO) )
