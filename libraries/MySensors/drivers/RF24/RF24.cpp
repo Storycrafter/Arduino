@@ -51,7 +51,7 @@ void RF24::csn(bool mode)
 			delayMicroseconds(11);  // allow csn to settle
 		}
 	}
-#elif !defined  (__arm__) || defined (CORE_TEENSY) || defined(ARDUINO_ARCH_SAMD)
+#elif !defined(__PIC32__) && (!defined  (__arm__) || defined (CORE_TEENSY) || defined(ARDUINO_ARCH_SAMD))
 	digitalWrite(csn_pin,mode);
 #endif
 
@@ -483,7 +483,6 @@ void RF24::begin(void)
 {
   // Initialize pins
   if (ce_pin != csn_pin) pinMode(ce_pin,OUTPUT);
-
   #if defined(__arm__) && ! defined( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
   	_SPI.begin(csn_pin);					// Using the extended SPI features of the DUE
 	_SPI.setClockDivider(csn_pin, 9);   // Set the bus speed to 8.4mhz on Due
@@ -491,6 +490,12 @@ void RF24::begin(void)
   	_SPI.setDataMode(csn_pin,SPI_MODE0);
 	ce(LOW);
   	//csn(HIGH);
+  #elif defined(__PIC32__)
+  	_SPI.begin();					// Using the extended SPI features of the DUE
+	// _SPI.setClockDivider(csn_pin, 9);   // Set the bus speed to 8.4mhz on Due
+	// _SPI.setBitOrder(csn_pin,MSBFIRST);	// Set the bit order and mode specific to this device
+	// _SPI.setMode(SPI_MODE0);
+	ce(LOW);
   #else
     if (ce_pin != csn_pin) pinMode(csn_pin,OUTPUT);
     _SPI.begin();
@@ -504,6 +509,8 @@ void RF24::begin(void)
   // Enabling 16b CRC is by far the most obvious case if the wrong timing is used - or skipped.
   // Technically we require 4.5ms + 14us as a worst case. We'll just call it 5ms for good measure.
   // WARNING: Delay is based on P-variant whereby non-P *may* require different timing.
+
+  // TODO: This kills the chipkit -- why?
   delay( 5 ) ;
 
   // Set 1500uS (minimum for 32B payload in ESB@250KBPS) timeouts, to make testing a little easier
@@ -894,6 +901,9 @@ uint8_t RF24::getDynamicPayloadSize(void)
   #if defined (__arm__) && ! defined( CORE_TEENSY ) && !defined (ARDUINO_ARCH_SAMD)
   _SPI.transfer(csn_pin, R_RX_PL_WID, SPI_CONTINUE );
   result = _SPI.transfer(csn_pin,0xff);
+  #elif defined(__PIC32__)
+  _SPI.transfer( R_RX_PL_WID );
+  result = _SPI.transfer(0xff);
   #else
   csn(LOW);
   _SPI.transfer( R_RX_PL_WID );

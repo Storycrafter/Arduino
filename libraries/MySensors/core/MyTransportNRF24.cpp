@@ -43,14 +43,17 @@ uint8_t _address;
 
 bool transportInit() {
 	// Start up the radio library
+	Serial.println("_rf24.begin()");
 	_rf24.begin();
 
 	if (!_rf24.isPVariant()) {
 		return false;
 	}
+	Serial.println("before setAutoAck");
 	_rf24.setAutoAck(1);
 	_rf24.setAutoAck(BROADCAST_PIPE,false); // Turn off auto ack for broadcast
 	_rf24.enableAckPayload();
+	Serial.println("before setting channel");
 	_rf24.setChannel(MY_RF24_CHANNEL);
 	_rf24.setPALevel(MY_RF24_PA_LEVEL);
 	if (!_rf24.setDataRate(MY_RF24_DATARATE)) {
@@ -60,6 +63,7 @@ bool transportInit() {
 	_rf24.setCRCLength(RF24_CRC_16);
 	_rf24.enableDynamicPayloads();
 
+	Serial.println("before openReadingPipe");
 	// All nodes listen to broadcast pipe (for FIND_PARENT_RESPONSE messages)
 	_rf24.openReadingPipe(BROADCAST_PIPE, TO_ADDR(BROADCAST_ADDRESS));
 

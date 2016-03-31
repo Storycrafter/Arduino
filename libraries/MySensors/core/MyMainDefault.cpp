@@ -1,7 +1,8 @@
 // Initialize library and handle sketch functions like we want to
 
 int main(void) {
-	init();
+	// TODO: Why is this a problem?
+	// init();
 	#if defined(USBCON)
 		#if defined(ARDUINO_ARCH_SAMD)
 			USBDevice.init();

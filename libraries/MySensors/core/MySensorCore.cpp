@@ -70,7 +70,6 @@ void _begin() {
 	debug(PSTR("Starting " MY_NODE_TYPE " (" MY_CAPABILIIES ", " LIBRARY_VERSION ")\n"));
 
 	signerInit();
-
 	#if defined(MY_RADIO_FEATURE)
 		_failedTransmissions = 0;
 
@@ -88,6 +87,7 @@ void _begin() {
 		}
 	#endif
 
+	Serial.println("before gateway feature");
 	#if defined(MY_GATEWAY_FEATURE)
 		#if defined(MY_INCLUSION_BUTTON_FEATURE)
 	    	inclusionInit();
@@ -110,7 +110,7 @@ void _begin() {
 	#if defined(MY_LEDS_BLINKING_FEATURE)
 		ledsInit();
 	#endif
-
+	Serial.println("before reading config");
 	// Read latest received controller configuration from EEPROM
 	hwReadConfigBlock((void*)&_cc, (void*)EEPROM_CONTROLLER_CONFIG_ADDRESS, sizeof(ControllerConfig));
 	if (_cc.isMetric == 0xff) {
@@ -155,6 +155,7 @@ void _begin() {
 		}
 	#endif
 
+	Serial.println("before node lock");
 #ifdef MY_NODE_LOCK_FEATURE
 	// Check if node has been locked down
 	if (hwReadConfig(EEPROM_NODE_LOCK_COUNTER) == 0) {

@@ -40,6 +40,7 @@ void hwWatchdogReset();
 void hwReboot();
 void serialEventRun();
 #define hwMillis() millis()
+#define delay(secs) delayMicroseconds(secs * 1000)
 
 void hwReadConfigBlock(void* buf, void* adr, size_t length);
 void hwWriteConfigBlock(void* buf, void* adr, size_t length);

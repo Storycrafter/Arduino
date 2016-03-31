@@ -102,7 +102,6 @@ void hwWatchdogReset() {
 }
 
 void hwInit() {
-  MY_SERIALDEVICE.begin(MY_BAUD_RATE);
 }
 
 int8_t hwSleep(unsigned long ms) {
